@@ -7,91 +7,93 @@
     <link rel="stylesheet" href="./style.css">
     <link rel="stylesheet" href="./chart.js">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <title>Document</title>
+    <!-- ↓Chart.jsの合計label表示プラグイン（動かないので別方法模索中） -->
+    <!-- <script src="chartjs-plugin-total-labels.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>ユーザー入力で変化するグラフ</title>
 </head>
 
 <body>
-    <!DOCTYPE html>
-    <html lang="ja">
+    <h1>ユーザー入力で変化するグラフ</h1>
+    <main>
+        <h2>概要</h2>
+        <a href="https://www.fsa.go.jp/policy/nisa2/moneyplan_sim/index.html">資産運用シミュレーション</a>のようなシミュレーターを作成する
+        <h3>参考サイト</h3>
+        <ul>
+            <li><a href="https://web-guided.com/1700/">料金シミュレーターで学ぶ、綺麗なJavaScript（jQuery）の書き方</a></li>
+            <li>Chart.js：
+                <a href="https://jp-seemore.com/web/4488/">➊jp-seemore.com</a>
+                <a href="https://www.nac-care.co.jp/blog/20231102/">➋nac-care.co.jp</a>
+            </li>
+            <li>chart更新：<a href="https://teratail.com/questions/216345">teratail</a></li>
+            <li>※未対応<br>計算式：<a
+                    href="https://color-piece.com/blog/calculation-simulator/">color-piece.com：【JavaScript】自動計算フォームの作り方【資産運用】</a>
+            </li>
+        </ul>
+        <div class="wrap">
 
-    <head>
-        <meta charset="UTF-8">
-        <title>グラフ作成の基本</title>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    </head>
+            <section>
+                <h2>資産運用シミュレータ</h2>
+                <div class="sim-setting">
+                    <div class="sim-setting-box">
+                        <p class="sim-setting-head">借入金額(loan)</p>
+                        <div class="sim-setting-input">
+                            <input id="loan" type="number" name="loan" value="" oninput="sliceMaxLength(this, 10)">
+                            <p class="sim-setting-input-unit">円</p>
+                        </div>
+                    </div>
 
-    <body>
-        <section>
-            <a href="https://web-guided.com/1700/">web-guided.com</a>
-            <div class="wrap">
+                    <div class="sim-setting-box">
+                        <p class="sim-setting-head">借入利率</p>
+                        <div class="sim-setting-input">
+                            <!-- <p id="rateSub" class="sim-setting-input-btn">-</p> -->
+                            <input id="rate" type="number" name="rate" value="" oninput="sliceMaxLength(this, 5)">
+                            <!-- <p id="rateAdd" class="sim-setting-input-btn">+</p> -->
+                            <p class="sim-setting-input-unit">%</p>
+                        </div>
+                    </div>
 
-                <h1>料金シミュレーター</h1>
+                    <div class="sim-setting-box">
+                        <p class="sim-setting-head">返済額(月)
+                        </p>
+                        <div class="sim-setting-input">
+                            <!-- <p id="baseSub" class="sim-setting-input-btn">-</p> -->
+                            <input id="repayment" type="number" name="base" value="" oninput="sliceMaxLength(this, 6)">
+                            <!-- <p id="baseAdd" class="sim-setting-input-btn">+</p> -->
+                            <p class="sim-setting-input-unit">円</p>
+                        </div>
+                    </div>
+                    
+                    <!-- <div class="sim-setting-box">
+                        <p class="sim-setting-head">回数(期間)</p>
+                        <div class="sim-setting-input">
+                            <input id="duration" type="number" name="duration" value="" oninput="sliceMaxLength(this, 6)">
+                        </div>
+                    </div> -->
+                </div>
+            </section>
+            
 
-                <table class="table">
-                    <thead>
-                        <th>本体価格</th>
-                        <th>オプション 1</th>
-                        <th>オプション 2</th>
-                    </thead>
-                    <tbody>
-                        <td><input type="text" id="js-input-price" value="3000"></td>
-                        <td>
-                            <label>
-                                <input type="checkbox" id="js-check-option-1" checked>
-                                <span>＋1円</span>
-                            </label>
-                        </td>
-                        <td>
-                            <label>
-                                <input type="checkbox" id="js-check-option-2">
-                                <span>ー2,000円</span>
-                            </label>
-                        </td>
-                    </tbody>
-                </table>
+            <section>
+                <h2>料金シミュレーター</h2>
+                <p>
+                    ご契約内容により、実際のご返済内容は異なる場合があります。
+                </p>
+                
 
                 <div>
-                    <p>合計（税抜）</p>
-                    <input type="text" readonly id="js-input-total-price">
+                    <h3>Chart.js反映</h3>
+                    <canvas id="myChart"></canvas>
                 </div>
-
-                <div>
-                    <p>合計（税込）</p>
-                    <input type="text" readonly id="js-input-total-price-in-tax">
+                <div class="sim-result">
+                    <p class="sim-result-head">試算結果</p>
+                    <table id="result"></table>
                 </div>
+            </section>
+        </div>
+    </main>
 
-            </div>
-
-            <hr>
-
-            <div class="wrap">
-                <p>条件</p>
-                <ul class="collection">
-                    <li class="collection-item">本体価格入力時、数値以外を入力したらエラーメッセージを入力欄の下に出す</li>
-                    <li class="collection-item">本体価格入力時、合計金額を表示する（税込、税抜）<br>エラーメッセージは非表示にする</li>
-                    <li class="collection-item">オプション1, 2のチェックが変わったら、合計金額を表示する（税込、税抜）</li>
-                    <li class="collection-item">オプション1がチェックなら、金額を＋1,000円</li>
-                    <li class="collection-item">オプション2がチェックなら、金額をー2,000円</li>
-                    <li class="collection-item">合計（税込み）は、「税抜の金額 * 1.1」 で計算する</li>
-                    <li class="collection-item">ページ読み込み時に、本体価格が入力されていたりチェックボックスがチェック済みなら、合計金額を表示する（税込、税抜）</li>
-                </ul>
-            </div>
-        </section>
-
-
-        <section>
-            <a href="https://jp-seemore.com/web/4488/">jp-seemore.com</a>
-            <canvas id="myChart"></canvas>
-        </section>
-        
-        <section>
-            <a href="https://qiita.com/yohm/items/586690bf36efa0838e37">qiita</a>
-        </section>
-
-        <script src="./chart.js"></script>
-    </body>
-
-    </html>
+    <script src="./chart.js"></script>
 </body>
 
 </html>
