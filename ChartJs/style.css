@@ -1,0 +1,19 @@
+.wrap {
+    padding: 40px;
+    width: 800px;
+}
+
+.wrap>* {
+    margin-bottom: 2em;
+}
+
+h1 {
+    font-size: 2em;
+    font-weight: bold;
+}
+
+input[type=text]:not(.browser-default)[readonly] {
+    border: none;
+    background-color: #eee;
+    margin-top: 8px;
+}

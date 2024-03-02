@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./chart.js">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <title>Document</title>
+</head>
+
+<body>
+    <!DOCTYPE html>
+    <html lang="ja">
+
+    <head>
+        <meta charset="UTF-8">
+        <title>グラフ作成の基本</title>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    </head>
+
+    <body>
+        <section>
+            <a href="https://web-guided.com/1700/">web-guided.com</a>
+            <div class="wrap">
+
+                <h1>料金シミュレーター</h1>
+
+                <table class="table">
+                    <thead>
+                        <th>本体価格</th>
+                        <th>オプション 1</th>
+                        <th>オプション 2</th>
+                    </thead>
+                    <tbody>
+                        <td><input type="text" id="js-input-price" value="3000"></td>
+                        <td>
+                            <label>
+                                <input type="checkbox" id="js-check-option-1" checked>
+                                <span>＋1円</span>
+                            </label>
+                        </td>
+                        <td>
+                            <label>
+                                <input type="checkbox" id="js-check-option-2">
+                                <span>ー2,000円</span>
+                            </label>
+                        </td>
+                    </tbody>
+                </table>
+
+                <div>
+                    <p>合計（税抜）</p>
+                    <input type="text" readonly id="js-input-total-price">
+                </div>
+
+                <div>
+                    <p>合計（税込）</p>
+                    <input type="text" readonly id="js-input-total-price-in-tax">
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div class="wrap">
+                <p>条件</p>
+                <ul class="collection">
+                    <li class="collection-item">本体価格入力時、数値以外を入力したらエラーメッセージを入力欄の下に出す</li>
+                    <li class="collection-item">本体価格入力時、合計金額を表示する（税込、税抜）<br>エラーメッセージは非表示にする</li>
+                    <li class="collection-item">オプション1, 2のチェックが変わったら、合計金額を表示する（税込、税抜）</li>
+                    <li class="collection-item">オプション1がチェックなら、金額を＋1,000円</li>
+                    <li class="collection-item">オプション2がチェックなら、金額をー2,000円</li>
+                    <li class="collection-item">合計（税込み）は、「税抜の金額 * 1.1」 で計算する</li>
+                    <li class="collection-item">ページ読み込み時に、本体価格が入力されていたりチェックボックスがチェック済みなら、合計金額を表示する（税込、税抜）</li>
+                </ul>
+            </div>
+        </section>
+
+
+        <section>
+            <a href="https://jp-seemore.com/web/4488/">jp-seemore.com</a>
+            <canvas id="myChart"></canvas>
+        </section>
+        
+        <section>
+            <a href="https://qiita.com/yohm/items/586690bf36efa0838e37">qiita</a>
+        </section>
+
+        <script src="./chart.js"></script>
+    </body>
+
+    </html>
+</body>
+
+</html>
