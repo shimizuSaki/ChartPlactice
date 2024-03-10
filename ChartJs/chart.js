@@ -1,18 +1,15 @@
 // 初期設定
-const initial_loan = 50000; //借入金額
+const initial_loan = 100000; //借入金額
 const initial_rate = 18.0; //利率
-const initial_repayment = 4000; //返済金額
-const initial_duration = 60; //期間上限
+const initial_repayment = 26000; //返済金額
+const initial_duration = 100; //期間上限
 
 // ユーザー入力値
 $('#loan').val(initial_loan);
 $('#rate').val(initial_rate);
-$('#repayment').val(initial_repayment);
+$('#repayment').val(initial_repayment );
 
-
-let loan = initial_loan; //借金
-let rate = initial_rate;
-let repayment = initial_repayment;
+let duration = Number( 0 ); //期間
 
 
 // 入力値に桁数制限を設ける
@@ -32,28 +29,26 @@ function comma(num) {
 /**
  * 必要な要素を最初に全部取得しておく
  */
-// const $inputPrice = $("#js-input-price");
-// const $checkOption1 = $("#js-check-option-1");
-// const $checkOption2 = $("#js-check-option-2");
-// const $inputTotalPrice = $("#js-input-total-price");
-// const $inputTotalPriceInTax = $("#js-input-total-price-in-tax");
+// const $inputPrice = Number( $("#js-input-price"));
+// const $checkOption1 = Number( $("#js-check-option-1"));
+// const $checkOption2 = Number( $("#js-check-option-2"));
+// const $inputTotalPrice = Number( $("#js-input-total-price"));
+// const $inputTotalPriceInTax = Number( $("#js-input-total-price-in-tax"));
 
 
 /**
  * グラフの型を作る（chart.jsの型）
  */
 
-// TODO:chartに合計値を表示できるようにしたい
-//      ∟参考：https://teratail.com/questions/214855
 let ctx = document.getElementById("myChart").getContext("2d");
 let repaymentChart = new Chart(ctx, {
   type: "bar", // グラフの種類を指定
   data: {
-    labels: ["お借入日","1", "2", "3", "4", "5"],
+    labels: ["お借入日"],
     datasets: [
       {
         label: "元金",
-        data: [0,0,0,0,0],
+        data: [0],
         backgroundColor: [
           "rgba(255, 99, 132, 0.8)",
           // "rgba(54, 162, 235, 0.2)",
@@ -72,7 +67,7 @@ let repaymentChart = new Chart(ctx, {
       },
       {
         label: "利息(sample)",
-        data: [0,0,0,0,0],
+        data: [0],
         backgroundColor: ["rgba(255, 99, 132, 0.2)"],
         borderColor: [
           "rgba(255, 99, 132, 1)",
@@ -86,6 +81,24 @@ let repaymentChart = new Chart(ctx, {
     ],
   },
   options: {
+    tooltips: {
+      // TODO:合計値を表示できるようにしたい
+      //      ∟参考：https://codepen.io/jun68ykt/pen/JjPgbPQ?editors=1010
+      // mode: 'nearest',
+      //   intersect: false,
+      //   mode: 'index',
+      //   callbacks: {
+      //     afterTitle: (items, data) => {
+      //       const values = items.map(e => e.value !== 'NaN' ? +e.value : 0 );
+      //       return `合計値: ${values[0] + values[1]}`;
+      //     },
+      //     label: (item, data) => {
+      //       const { label } = data.datasets[item.datasetIndex];
+      //       const value = item.value.replace('NaN', '');
+      //       return value && `${label}: ${value}`;
+      //     }
+      //   }
+    },
     scales: {
       x: {
         stacked: true,
@@ -101,73 +114,137 @@ let repaymentChart = new Chart(ctx, {
 
 
 
-// シミュレーション出力用変数
-let chart_labels = repaymentChart.data.labels;
-let chart_principals = repaymentChart.data.datasets[0].data;
-let chart_interests = repaymentChart.data.datasets[1].data;
-
-
-
+// シミュレーションchart出力用変数
 
 // シミュレーション計算＆出力
-// HACK:シミュレーション結果を配列に格納し、最後にまとめて出力したほうが使いまわしに便利そう....？
+// FIXME:シミュレーション結果を配列に格納し、最後にまとめて出力したほうが使いまわしに便利そう....？
 
 function resultCalc() {
-  let principal = 0; //元金
-  let interest = 0; //利息
-  let interest_apply = 0;//利息充当金
-  let principal_apply = 0;//元金充当金
-  let duration = 0; //期間
+  console.log("＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝");
+  console.log("resultCalc開始");
+  console.log("＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝");
+  let chart_labels = repaymentChart.data.labels;
+  let chart_principals = repaymentChart.data.datasets[0].data;
+  let chart_interests = repaymentChart.data.datasets[1].data;
+  let principal = Number( 0 ); //元金
+  let last_duration = Number( 0 ); //期間最終日
+  let interest = Number( 0 ); //利息
 
-  // 試算結果表のヘッダーを出力
-  $('#result').append('<tr><th>回数</th><th>返済<br>金額</th><th>元金<br>充当</th><th>利息<br>充当</th><th>元金</th></tr>');
-  
+
+  let total_repayment = Number( 0 ); //返済合計額
+  let total_interest = Number( 0 ); //利息合計額
+
+
+  // 入力フォームのデータを取得
+  let loan = Number( $('#loan').val() );
+  let rate = Number( $('#rate').val() );
+  let repayment = Number( $('#repayment').val() );
+
+
   // お借入日 の処理
   principal = loan;
   chart_principals[0] = principal;
-  $('#result').append('<tr><td>お借入日</td><td></td><td></td><td></td><td>&yen;' + comma(loan) + '</td></tr>');
+  console.log("loan = " + loan);
+  console.log("principal = " + principal);
+  console.log("interest = " + interest);
   
-  // 返済処理(１回ごと)
+  // 試算結果表のヘッダーを出力
+  $('#result').append('<thead><th>回数</th><th>返済額</th><th>元金充当</th><th>利息充当</th><th>返済残高</th></thead>');
+  $('#result').append('<tr><td>お借入日</td><td></td><td></td><td></td><td>&yen;' + comma(loan) + '</td></tr>');
+
+
+
+  // 返済処理(１回の返済ごと)
   for (let i = 1; i <= initial_duration; i++) {
-    let label = i + "(label)";
-
-    // TODO:計算方法を確認して計算を実装(利息充当金＆元金充当金)
-    principal = principal - repayment;
-    interest = Math.floor(principal * (rate / 100));
-    // interest_apply = Math.floor(principal * (rate / 100));
-    // principal_apply = Math.floor(principal * (rate / 100));
+    console.log(i + "回目の返済処理");
+    let label = i;
+    let principal_apply = Number( 0 );//元金充当金
+    let interest_apply = Number( 0 );//利息充当金
     
+    interest = Math.floor(principal * (rate / 100) / 12); //ざっくり12ヶ月の想定
+    loan = Number( loan - repayment + interest );
+    principal = loan;
+    
+    // FIXME:厳密な計算が必要な場合は、計算方法を確認して調整
+    interest_apply = interest;
+    principal_apply = Math.floor(repayment - interest);
+    // console.log(interest_apply + principal_apply) //1回の返済金額と同じになっていればOK
+    // principal = principal - (interest_apply + principal_apply);
 
+
+    total_repayment = Number( total_repayment + repayment );
+    total_interest = Number( total_interest + interest_apply);
+    
+    
     // tableへの出力
-    $('#result').append('<tr><td>' + i + '</td><td>&yen;' + comma(repayment) + '</td><td>&yen;' + comma(principal_apply) + '</td><td>&yen;' + comma(interest_apply) + '</td><td> &yen;' + comma(principal) + '</td></tr>');
-
-
-    // グラフの型が不足している場合に、グラフの型を追加する
+    $('#result').append('<tr><td>' + i + '</td><td>&yen;' + comma(repayment) + '</td><td>&yen;' + comma(principal_apply) + '</td><td>&yen;' + comma(interest) + '</td><td> &yen;' + comma(loan) + '</td></tr>');
+    // $('#result').append('<tr><td>' + i + '</td><td>&yen;' + comma(repayment) + '</td><td>&yen;' + comma(0) + '</td><td>&yen;' + comma(0) + '</td><td> &yen;' + comma(loan) + '</td></tr>');
+    
+    
+    // 足りないchart枠の追加
     if (chart_labels[i] == undefined) {
       addData(repaymentChart, label, repaymentChart.data);
     }
-
     chart_interests[i] = interest;
     chart_principals[i] = principal;
-    // 返済完了の処理
-    if (principal - repayment <= 0) {
-      console.log("最終日の処理開始" + [i]);
-      duration = [i];
-      repayment = principal;
-
-      principal = 0;
-      
-      $('#result').append('<tr><td>' + (i+1) + '</td><td>&yen;' + comma(repayment) + '</td><td>&yen;' + comma(principal_apply) + '</td><td>&yen;' + comma(interest_apply) + '</td><td> &yen;' + comma(principal) + '</td></tr>');
-      // TODO:グラフの型が超過している場合、超過分しているグラフの型を削除する
-      if (duration != 0) {
-        i = i++;
-        // removeData(repaymentChart);
-      }
-      return;
+    duration = i;
+    
+    repaymentChart.update();
+    
+    if (loan - repayment <= Number( 0)) {
+      last_duration = duration + 1;
+      break;
     }
-    repaymentChart.update()
-  }  
-}
+    
+  }  // 返済処理(１回の返済ごと)終了
+
+
+  // 返済完了日の処理
+  console.log("【返済完了日の処理開始】");
+  console.log("last_duration=" + last_duration);
+  label = last_duration;
+  addData(repaymentChart, label, repaymentChart.data);
+
+  repayment = loan;
+  total_repayment = Number( total_repayment + repayment );
+  total_interest = Number( total_interest + interest);
+  
+  interest = Math.floor(principal * (rate / 100) / 12); //ざっくり12ヶ月の想定
+  loan = Number( loan - repayment + interest );
+  
+  interest_apply = interest;
+  principal_apply = Math.floor(repayment - interest);
+
+  
+  loan = Number( 0 );
+  principal = Number( 0 );
+  interest = Number( 0 );
+  chart_interests[last_duration] = interest;
+  chart_principals[last_duration] = principal;
+
+  $('#result').append('<tr><td>' + last_duration + '</td><td>&yen;' + comma(repayment) + '</td><td>&yen;' + comma(principal_apply) + '</td><td>&yen;' + comma(interest_apply) + '</td><td> &yen;' + comma(loan) + '</td></tr>');
+  $('#result').append('<tfoot><th>累計</th><th>&yen;' + comma(total_repayment) + '</th><th></th><th>&yen;' + comma(total_interest) + '</th><th></th></tfoot>');
+  
+  // 余分なchart枠の削除
+  if (last_duration < chart_labels.length) {
+    // last_duration = last_duration - 1 ;
+    for (let j = chart_labels.length; j > last_duration+1; j--) {
+    // for (let j = last_duration + 1; j < chart_labels.length; j++) {
+      console.log("--chart_labels.lengthは" + chart_labels.length);
+      console.log("--余分なchartの削除" + j);
+      
+      // TODO:removeData(repaymentChart);で、余分なchart枠だけが消えるようにする。
+      console.log(repaymentChart.data.labels);
+      console.log(repaymentChart.data.datasets);
+      removeData(repaymentChart);
+    }
+    repaymentChart.update();
+  }
+
+  console.log("【返済完了日の処理終わり】");
+
+
+} //resultCalc終了
 
 function addData(chart, label, newData) {
   chart.data.labels.push(label);
@@ -186,22 +263,22 @@ function removeData(chart) {
   chart.update();
 }
 
-
 resultCalc();
 
 // 期間が選択されたときの処理
 // $(function() {
 //   $('#initial_duration').change(function() {
 //     $('#result').empty();
-//     initial_duration = $('#initial_duration').val();
+//     initial_duration = Number( $('#initial_duration').val() );
 //     resultCalc();
 //   });
 // });
+
 // 返済額が選択されたときの処理
 $(function() {
   $('#repayment').change(function() {
     $('#result').empty();
-    repayment = $('#repayment').val();
+    repayment = Number( $('#repayment').val() );
     resultCalc();
   });
 });
@@ -210,12 +287,12 @@ $(function() {
 $(function() {
   $('#loan').change(function() {
     $('#result').empty();
-    loan = Number($('#loan').val());
+    loan = Number( $('#loan').val() );
     resultCalc();
   });
   $('#rate').change(function() {
     $('#result').empty();
-    rate = Number($('#rate').val());
+    rate = Number( $('#rate').val() );
     resultCalc();
   });
 });
@@ -228,7 +305,7 @@ $(function() {
   //   $('#loanSub').on('click', function() {
   //     $('#result').empty();
   //     if(loan < 10000) {
-  //       loan = 0;
+  //       loan = Number( 0 );
   //     } else {
   //       loan -= 10000;
   //     }
@@ -248,8 +325,8 @@ $(function() {
   
   //   $('#rateSub').on('click', function() {
   //     $('#result').empty();
-  //     if(rate <= 0) {
-  //       rate = 0;
+  //     if(rate <= Number( 0)) {
+  //       rate = Number( 0 );
   //     } else {
   //       rate = rate - 0.1;
   //       $('#rate').val(rate);
